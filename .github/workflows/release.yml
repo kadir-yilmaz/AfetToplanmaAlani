@@ -28,8 +28,9 @@ jobs:
 
       - name: Install ElectronNET.CLI
         run: |
-          dotnet tool install ElectronNET.CLI -g
-          "$env:USERPROFILE\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          dotnet new tool-manifest
+          dotnet tool install ElectronNET.CLI
+
 
 
 
@@ -57,7 +58,8 @@ jobs:
       - name: Build Electron app
         run: |
           cd AfetToplanmaAlani.WebUI
-          dotnet electronize build /target win /publish-ready-to-run true
+          dotnet tool run electronize build /target win /publish-ready-to-run true
+
 
       - name: Package ZIP
         shell: pwsh
