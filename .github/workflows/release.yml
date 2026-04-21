@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*' # Trigger on tags like v1.0.0
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Manual version number (e.g. 1.0.0)'
+        required: true
+        default: '1.0.0'
 
 jobs:
   release:
@@ -34,12 +40,18 @@ jobs:
           dotnet tool install Microsoft.Web.LibraryManager.Cli -g
           "$env:USERPROFILE\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Get version from tag
+      - name: Get version
         id: get_version
         shell: pwsh
         run: |
-          $tag = "${{ github.ref_name }}"
-          $version = $tag -replace '^v', ''
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $version = "${{ github.event.inputs.version }}"
+          } else {
+            $tag = "${{ github.ref_name }}"
+            $version = $tag -replace '^v', ''
+          }
+          # 'v' karakterini temizle (eğer elle v1.0.0 yazılırsa)
+          $version = $version -replace '^v', ''
           echo "VERSION=$version" >> $env:GITHUB_OUTPUT
 
       - name: Restore Front-end Libraries
@@ -94,9 +106,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: "*.zip"
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          tag_name: v${{ steps.get_version.outputs.VERSION }}
+          name: Release v${{ steps.get_version.outputs.VERSION }}
           draft: false
           prerelease: false
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
