@@ -68,18 +68,16 @@ jobs:
       - name: Package ZIP
         shell: pwsh
         run: |
-          # Find the unpacked directory (usually bin/desktop/win-unpacked)
-          $unpackedDir = Get-ChildItem -Path "AfetToplanmaAlani.WebUI/bin/desktop/*/win-unpacked" -Directory | Select-Object -First 1
-          if (-not $unpackedDir) {
-              # Fallback search if path is different
-              $unpackedDir = Get-ChildItem -Path "AfetToplanmaAlani.WebUI" -Recurse -Filter "win-unpacked" -Directory | Select-Object -First 1
-          }
+          # Robust search for win-unpacked directory anywhere in the workspace
+          $unpackedDir = Get-ChildItem -Path "." -Recurse -Filter "win-unpacked" -Directory | Select-Object -First 1
           
           if ($unpackedDir) {
               echo "Found unpacked dir at $($unpackedDir.FullName)"
+              # Go inside the parent of win-unpacked to avoid zipping the whole path structure
               Compress-Archive -Path "$($unpackedDir.FullName)\*" -DestinationPath "AfetToplanmaAlani-v${{ steps.get_version.outputs.VERSION }}-win.zip"
           } else {
-              echo "Error: win-unpacked directory not found!"
+              echo "Error: win-unpacked directory not found anywhere!"
+              Get-ChildItem -Path "." -Recurse -Depth 3 # Print directory structure for debugging
               exit 1
           }
 
