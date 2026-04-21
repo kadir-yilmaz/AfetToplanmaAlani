@@ -1,4 +1,4 @@
-﻿using AfetToplanmaAlani.EL.Models;
+using AfetToplanmaAlani.EL.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,6 +9,7 @@ public class PlaceCategoryConfig : IEntityTypeConfiguration<PlaceCategory>
         builder.HasKey(pc => pc.Id);
         builder.Property(pc => pc.Name).IsRequired().HasMaxLength(100);
 
+        /*
         // Seed Data - tüm isimleri küçük harf ve İngilizce yap
         builder.HasData(
             new PlaceCategory { Id = 1, Name = "Toplanma Noktaları" },
@@ -17,5 +18,6 @@ public class PlaceCategoryConfig : IEntityTypeConfiguration<PlaceCategory>
             new PlaceCategory { Id = 4, Name = "Fırın" },
             new PlaceCategory { Id = 5, Name = "Eczane" }
         );
+        */
     }
 }

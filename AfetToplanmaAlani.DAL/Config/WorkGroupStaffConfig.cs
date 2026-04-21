@@ -1,4 +1,4 @@
-﻿using AfetToplanmaAlani.EL.Models;
+using AfetToplanmaAlani.EL.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -59,6 +59,7 @@ namespace AfetToplanmaAlani.DAL.Config
                 "Afet İletişim Çalışma Grubu"
             };
 
+            /*
             // Seed Data (örnek 20 kişi)
             builder.HasData(
                 new WorkGroupStaff { Id = 1, Name = "Ali", Surname = "Yılmaz", PhoneNumber = "5551110001", WorkGroup = workGroups[0], Crew = "AFAD", Duty = "Lider" },
@@ -82,6 +83,7 @@ namespace AfetToplanmaAlani.DAL.Config
                 new WorkGroupStaff { Id = 19, Name = "Büşra", Surname = "Aydın", PhoneNumber = "5551110019", WorkGroup = workGroups[18], Crew = "AFAD", Duty = "Üye" },
                 new WorkGroupStaff { Id = 20, Name = "Serkan", Surname = "Topal", PhoneNumber = "5551110020", WorkGroup = workGroups[19], Crew = "Kızılay", Duty = "Üye" }
             );
+            */
         }
     }
 }

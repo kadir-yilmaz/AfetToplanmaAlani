@@ -1,4 +1,4 @@
-﻿using AfetToplanmaAlani.EL.Models;
+using AfetToplanmaAlani.EL.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -23,6 +23,7 @@ namespace AfetToplanmaAlani.DAL.Config
                 .OnDelete(DeleteBehavior.SetNull);
 
 
+            /*
             builder.HasData(
     new Place { Id = 1, Name = "Merkez Park Toplanma Alanı", City = "İstanbul", District = "Kadıköy", Neighborhood = "Fenerbahçe", Latitude = 40.9890, Longitude = 29.0280, ContactNumber = "02120000000", PlaceCategoryId = 1 },
     new Place { Id = 2, Name = "Moda Çadır Alanı", City = "İstanbul", District = "Kadıköy", Neighborhood = "Moda", Latitude = 40.9912, Longitude = 29.0321, ContactNumber = "02120000001", PlaceCategoryId = 2 },
@@ -60,6 +61,7 @@ namespace AfetToplanmaAlani.DAL.Config
     new Place { Id = 29, Name = "Konak Fırını", City = "İzmir", District = "Konak", Neighborhood = "Konak", Latitude = 38.4170, Longitude = 27.1280, ContactNumber = "02320000008", PlaceCategoryId = 4 },
     new Place { Id = 30, Name = "Göztepe Eczanesi", City = "İzmir", District = "Konak", Neighborhood = "Göztepe", Latitude = 38.4150, Longitude = 27.1290, ContactNumber = "02320000009", PlaceCategoryId = 5 }
 );
+*/
 
 
         }

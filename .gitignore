@@ -27,3 +27,10 @@ release/
 # OS specific
 .DS_Store
 Thumbs.db
+
+# Database and Backup files
+*.db
+*.db-shm
+*.db-wal
+*.backup-*
+

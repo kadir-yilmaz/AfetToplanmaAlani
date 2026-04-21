@@ -1,4 +1,4 @@
-﻿using AfetToplanmaAlani.EL.Models;
+using AfetToplanmaAlani.EL.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -25,6 +25,7 @@ namespace AfetToplanmaAlani.DAL.Config
                 .HasForeignKey(s => s.PlaceId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            /*
             // Seed Data (örnek)
             builder.HasData(
                 new Staff
@@ -52,6 +53,7 @@ namespace AfetToplanmaAlani.DAL.Config
                     PlaceId = 5
                 }
             );
+            */
         }
     }
 }
