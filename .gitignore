@@ -19,14 +19,10 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # Electron specific
-dist/
+**/bin/desktop/dist/
+**/obj/desktop/
 release/
-*.log
-bin/desktop/
-obj/desktop/
-ElectronHostHook/node_modules/
-ElectronHostHook/bin/
-ElectronHostHook/obj/
+
 
 # OS specific
 .DS_Store

@@ -1,4 +1,4 @@
-﻿@model X.PagedList.IPagedList<AfetToplanmaAlani.EL.Models.Vehicle>
+@model X.PagedList.IPagedList<AfetToplanmaAlani.EL.Models.Vehicle>
 
 @{
     ViewData["Title"] = "Araç Listesi";
@@ -105,7 +105,7 @@
                                         data-bs-toggle="modal"
                                         data-bs-target="#staffModal"
                                         data-plate="@vehicle.Plate"
-                                        data-staff='@System.Text.Json.JsonSerializer.Serialize(vehicle.VehicleStaff.Select(s => new { s.Name, s.Surname, s.PhoneNumber }))'>
+                                        data-staff='@System.Text.Json.JsonSerializer.Serialize(vehicle.VehicleStaff?.Select(s => new { s.Name, s.Surname, s.PhoneNumber }) ?? Enumerable.Empty<object>())'>
                                     <i class="bi bi-people-fill me-1"></i>
                                     <span>Personelleri Göster (@(vehicle.VehicleStaff?.Count ?? 0))</span>
                                 </button>
