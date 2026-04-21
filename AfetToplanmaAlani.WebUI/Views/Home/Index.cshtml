@@ -1,12 +1,17 @@
-﻿@{
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
     ViewData["Title"] = "Ana Sayfa";
+    var version = Configuration["Version"] ?? "Test";
 }
 
 <div class="container py-4">
     <!-- Dashboard Header -->
     <div class="dashboard-header">
         <img src="~/images/afad.png" alt="AFAD" />
-        <h1>AFAD Toplanma Alanı Yönetim Sistemi</h1>
+        <div class="header-text-container">
+            <h1>AFAD Toplanma Alanı Yönetim Sistemi</h1>
+            <div class="version-text">Version: @version</div>
+        </div>
         <img src="~/images/avcilarkaymakamligi.png" alt="Avcılar Kaymakamlığı" />
     </div>
 
