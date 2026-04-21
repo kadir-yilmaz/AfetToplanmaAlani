@@ -1,4 +1,4 @@
-﻿using AfetToplanmaAlani.EL.Models;
+using AfetToplanmaAlani.EL.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
