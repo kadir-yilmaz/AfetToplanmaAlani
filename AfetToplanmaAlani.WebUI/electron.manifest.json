@@ -1,0 +1,57 @@
+{
+  "executable": "AfetToplanmaAlani.WebUI",
+  "splashscreen": {
+    "imageFile": ""
+  },
+  "name": "AfetToplanmaAlani.WebUI",
+  "author": "",
+  "singleInstance": false,
+  "environment": "Production",
+  "build": {
+    "appId": "com.AfetToplanmaAlani.WebUI.app",
+    "productName": "AFAD",
+    "copyright": "Copyright © 2020",
+    "buildVersion": "1.0.0",
+    "compression": "maximum",
+    "directories": {
+    },
+    "win": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "signAndEditExecutable": false
+    },
+    "extraResources": [
+      {
+        "from": "./bin",
+        "to": "bin",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "files": [
+      {
+        "from": "./ElectronHostHook/node_modules",
+        "to": "ElectronHostHook/node_modules",
+        "filter": [
+          "**/*"
+        ]
+      },
+      "**/*"
+    ]
+  },
+  "webPreferences": {
+    "webSecurity": true,
+    "allowRunningInsecureContent": false,
+    "contextIsolation": false,
+    "enableRemoteModule": false,
+    "nodeIntegration": false,
+    "experimentalFeatures": true
+  }
+}

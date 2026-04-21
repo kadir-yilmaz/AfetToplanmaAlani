@@ -1,0 +1,140 @@
+﻿@model X.PagedList.IPagedList<AfetToplanmaAlani.EL.Models.PlaceCategory>
+@{
+    ViewData["Title"] = "Yer Kategorileri";
+}
+
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h1><i class="bi bi-layer-forward me-2"></i>Yer Kategorileri</h1>
+            <p>Yer kategorilerini oluşturun ve yönetin</p>
+        </div>
+        <a asp-action="Create" class="btn-header-add">
+            <i class="bi bi-plus-circle me-2"></i>Yeni Kategori Ekle
+        </a>
+    </div>
+
+    <!-- Alerts -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@ViewBag.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Table -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width: 60%;">Kategori Adı</th>
+                                <th style="width: 20%;" class="text-center">Yer Sayısı</th>
+                                <th style="width: 20%;" class="text-center">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.OrderBy(x => x.Name))
+                            {
+                                <tr>
+                                    <td><strong>@item.Name</strong></td>
+                                    <td class="text-center">
+                                        @if (item.Places != null && item.Places.Any())
+                                        {
+                                            <span class="badge bg-info">@item.Places.Count()</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">0</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a asp-action="Update" asp-route-id="@item.Id"
+                                               class="btn-action btn-action-edit" title="Güncelle">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn-action btn-action-delete"
+                                                    title="Sil"
+                                                    onclick="confirmDelete(@item.Id, '@item.Name')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    
+                    <!-- Pagination -->
+                    @await Html.PartialAsync("_Pagination", Model)
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="table-card">
+            <div class="empty-state">
+                <i class="bi bi-tags"></i>
+                <h5>Henüz kategori bulunmuyor</h5>
+                <p class="text-muted">İlk kategorinizi eklemek için yukarıdaki butonu kullanın.</p>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Kategoriyi Sil</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong id="deleteCategoryName"></strong> kategorisini silmek istediğinizden emin misiniz?</p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Dikkat!</strong> Bu kategoriye ait yerler varsa silme işlemi başarısız olabilir.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="deleteCategoryId" />
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i>Sil</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(id, name) {
+        document.getElementById('deleteCategoryName').textContent = name;
+        document.getElementById('deleteCategoryId').value = id;
+        document.getElementById('deleteForm').action = '@Url.Action("Delete")';
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+</script>

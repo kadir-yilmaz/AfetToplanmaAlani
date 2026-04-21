@@ -1,0 +1,613 @@
+﻿@model AfetToplanmaAlani.EL.Dtos.Place.PlaceDtoForCreate
+
+@{
+    ViewData["Title"] = "Yeni Yer Ekle";
+    var categories = ViewBag.Categories as IEnumerable<AfetToplanmaAlani.EL.Models.PlaceCategory>;
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="text-primary mb-0">
+                <i class="fas fa-map-marker-alt me-2"></i>Yeni Yer Ekle
+            </h2>
+            <p class="text-muted">Haritada konum belirleyerek yeni bir yer ekleyin</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Sol Panel - Form -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-edit me-2"></i>Yer Bilgileri
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post" novalidate>
+                        @Html.AntiForgeryToken()
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="Name" class="form-control" id="nameInput" placeholder="Yer adı" />
+                            <label asp-for="Name">
+                                <i class="fas fa-tag me-1"></i>Yer Adı <span class="text-danger">*</span>
+                            </label>
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select asp-for="City" class="form-select" id="cityInput" asp-items="@(new SelectList(ViewBag.Cities))">
+                                        <option value="">-- Şehir Seçin --</option>
+                                    </select>
+                                    <label asp-for="City">
+                                        <i class="fas fa-city me-1"></i>Şehir <span class="text-danger">*</span>
+                                    </label>
+                                    <span asp-validation-for="City" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select asp-for="District" class="form-select" id="districtInput" asp-items="@(new SelectList(ViewBag.Districts))">
+                                        <option value="">-- İlçe Seçin --</option>
+                                    </select>
+                                    <label asp-for="District">
+                                        <i class="fas fa-building me-1"></i>İlçe <span class="text-danger">*</span>
+                                    </label>
+                                    <span asp-validation-for="District" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="Neighborhood" class="form-control" id="neighborhoodInput" placeholder="Mahalle" />
+                            <label asp-for="Neighborhood">
+                                <i class="fas fa-home me-1"></i>Mahalle
+                            </label>
+                            <span asp-validation-for="Neighborhood" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="ContactNumber" class="form-control" id="contactInput" placeholder="Telefon Numarası" />
+                            <label asp-for="ContactNumber">
+                                <i class="fas fa-phone me-1"></i>Telefon Numarası
+                            </label>
+                            <span asp-validation-for="ContactNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <div class="form-floating">
+                                    <input asp-for="Latitude" class="form-control" type="number" step="0.000001" value="40.987245" />
+                                    <label asp-for="Latitude">
+                                        <i class="fas fa-compass me-1"></i>Enlem <span class="text-danger">*</span>
+                                    </label>
+                                    <span asp-validation-for="Latitude" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-floating">
+                                    <input asp-for="Longitude" class="form-control" type="number" step="0.000001" value="28.712468" />
+                                    <label asp-for="Longitude">
+                                        <i class="fas fa-compass me-1"></i>Boylam <span class="text-danger">*</span>
+                                    </label>
+                                    <span asp-validation-for="Longitude" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-floating mb-4">
+                            <select asp-for="PlaceCategoryId" class="form-select" asp-items="@(new SelectList(categories, "Id", "Name"))">
+                                <option value="">-- Kategori Seçin --</option>
+                            </select>
+                            <label asp-for="PlaceCategoryId">
+                                <i class="fas fa-list me-1"></i>Kategori <span class="text-danger">*</span>
+                            </label>
+                            <span asp-validation-for="PlaceCategoryId" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-save me-2"></i>Kaydet
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>İptal
+                            </a>
+                        </div>
+
+                        <!-- Validation Summary -->
+                        <div asp-validation-summary="ModelOnly" class="text-danger mt-3"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ Panel - Harita -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-map me-2"></i>Konum Seçimi
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Arama Kutusu -->
+                    <div class="p-3 border-bottom bg-light">
+                        <div class="position-relative">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search text-primary"></i>
+                                </span>
+                                <input type="text"
+                                       id="searchBox"
+                                       class="form-control form-control-lg"
+                                       placeholder="Haritada ara"
+                                       autocomplete="off" />
+                                <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+
+                            <!-- Sonuç Dropdown -->
+                            <div id="searchDropdown" class="position-absolute w-100 mt-1" style="z-index: 1050; display: none;">
+                                <div class="card border shadow">
+                                    <div id="searchResults" class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;"></div>
+                                    <div id="searchLoading" class="p-3 text-center text-muted" style="display: none;">
+                                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                                            <span class="visually-hidden">Yükleniyor...</span>
+                                        </div>
+                                        Aranıyor...
+                                    </div>
+                                    <div id="noResults" class="p-3 text-center text-muted" style="display: none;">
+                                        <i class="fas fa-exclamation-circle me-2"></i>
+                                        Sonuç bulunamadı
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Yazmaya başlayın veya haritada tıklayın
+                        </small>
+                    </div>
+
+                    <!-- Harita -->
+                    <div id="map" style="height: 450px; width: 100%;"></div>
+                </div>
+                <div class="card-footer bg-light text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-mouse-pointer me-1"></i>
+                        Haritada istediğiniz konuma tıklayarak konum seçebilirsiniz
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Validation Scripts -->
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/map-search.js"></script>
+
+    <!-- Leaflet Map Scripts -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <script>
+        var map, marker;
+        var debounceTimer;
+        var selectedIndex = -1;
+        var searchResults = [];
+        var searchService;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            searchService = new MapSearchService();
+            initializeMap();
+            initializeSearch();
+            initializeEvents();
+            initializeValidation();
+        });
+
+        function initializeValidation() {
+            // Form submit validation
+            $('form').on('submit', function(e) {
+                if (!$(this).valid()) {
+                    e.preventDefault();
+
+                    // İlk hata olan alana scroll
+                    var firstError = $('.field-validation-error:first');
+                    if (firstError.length) {
+                        var errorField = firstError.closest('.form-floating, .mb-3');
+                        if (errorField.length) {
+                            $('html, body').animate({
+                                scrollTop: errorField.offset().top - 100
+                            }, 500);
+                        }
+                    }
+                }
+            });
+
+            // Real-time validation feedback
+            $('input, select').on('blur', function() {
+                $(this).valid();
+            });
+        }
+
+        function initializeMap() {
+            var startLat = parseFloat(document.getElementById('Latitude').value) || 40.987245;
+            var startLng = parseFloat(document.getElementById('Longitude').value) || 28.712468;
+
+            map = L.map('map').setView([startLat, startLng], 15);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            var customIcon = L.divIcon({
+                html: '<i class="fas fa-map-marker-alt text-dark" style="font-size: 32px;"></i>',
+                iconSize: [32, 32],
+                iconAnchor: [16, 32],
+                className: 'custom-marker'
+            });
+
+            marker = L.marker([startLat, startLng], { icon: customIcon }).addTo(map);
+
+            map.on('click', function (e) {
+                updateLocation(e.latlng.lat, e.latlng.lng);
+                hideSearchDropdown();
+
+                // Koordinat alanlarını validate et
+                $('#Latitude').valid();
+                $('#Longitude').valid();
+            });
+        }
+
+        function initializeSearch() {
+            var searchBox = document.getElementById('searchBox');
+            var clearBtn = document.getElementById('clearSearch');
+
+            searchBox.addEventListener('input', handleSearchInput);
+            searchBox.addEventListener('focus', handleSearchFocus);
+            searchBox.addEventListener('keydown', handleKeyDown);
+            clearBtn.addEventListener('click', clearSearch);
+
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('#searchBox') && !e.target.closest('#searchDropdown')) {
+                    hideSearchDropdown();
+                }
+            });
+        }
+
+        function initializeEvents() {
+            document.getElementById('Latitude').addEventListener('change', function() {
+                updateMarkerFromInputs();
+                $(this).valid();
+            });
+
+            document.getElementById('Longitude').addEventListener('change', function() {
+                updateMarkerFromInputs();
+                $(this).valid();
+            });
+        }
+
+        function handleSearchInput(e) {
+            clearTimeout(debounceTimer);
+            var query = e.target.value.trim();
+
+            if (query.length < 2) {
+                hideSearchDropdown();
+                return;
+            }
+
+            showLoading(true);
+            debounceTimer = setTimeout(() => searchLocation(query), 500);
+        }
+
+        function handleSearchFocus() {
+            var query = document.getElementById('searchBox').value.trim();
+            if (query.length >= 2 && searchResults.length > 0) {
+                showSearchDropdown();
+            }
+        }
+
+        function handleKeyDown(e) {
+            var dropdown = document.getElementById('searchDropdown');
+            if (dropdown.style.display === 'none') return;
+
+            var items = document.querySelectorAll('.search-result-item');
+
+            switch(e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                    updateSelection();
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, -1);
+                    updateSelection();
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    if (selectedIndex >= 0 && selectedIndex < items.length) {
+                        selectSearchResult(searchResults[selectedIndex]);
+                    }
+                    break;
+                case 'Escape':
+                    hideSearchDropdown();
+                    break;
+            }
+        }
+
+        function updateSelection() {
+            var items = document.querySelectorAll('.search-result-item');
+            items.forEach((item, index) => {
+                if (index === selectedIndex) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        function searchLocation(query) {
+            searchService.search(query)
+                .then(data => {
+                    searchResults = data || [];
+                    selectedIndex = -1;
+
+                    if (searchResults.length > 0) {
+                        displaySearchResults(searchResults);
+                    } else {
+                        showNoResults(true);
+                    }
+                })
+                .catch(err => {
+                    console.error('Arama hatası:', err);
+                    showNoResults(true);
+                })
+                .finally(() => {
+                    showLoading(false);
+                });
+        }
+
+        function displaySearchResults(results) {
+            var container = document.getElementById('searchResults');
+            container.innerHTML = '';
+
+            results.forEach((result, index) => {
+                var item = document.createElement('div');
+                item.className = 'list-group-item list-group-item-action search-result-item d-flex align-items-center';
+                item.style.cursor = 'pointer';
+
+                // Use shared service formatter
+                var formatted = searchService.formatResult(result);
+                var icon = getLocationIcon(result);
+
+                item.innerHTML = `
+                    <div class="me-3 text-purple">
+                        <i class="${icon}" style="font-size: 18px;"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-medium text-dark">${formatted.title}</div>
+                        <small class="text-muted">${formatted.subtitle}</small>
+                    </div>
+                    <div class="text-muted">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                `;
+
+                item.addEventListener('click', () => selectSearchResult(result));
+                item.addEventListener('mouseenter', () => {
+                    selectedIndex = index;
+                    updateSelection();
+                });
+
+                container.appendChild(item);
+            });
+
+            showSearchDropdown();
+            showNoResults(false);
+        }
+
+        function getLocationIcon(result) {
+            var category = result.category;
+            var type = result.type;
+
+            if (category === 'office') return 'fas fa-building';
+            if (category === 'amenity') {
+                if (type === 'hospital') return 'fas fa-hospital';
+                if (type === 'school' || type === 'university') return 'fas fa-graduation-cap';
+                if (type === 'bank') return 'fas fa-university';
+                if (type === 'restaurant' || type === 'cafe') return 'fas fa-utensils';
+                return 'fas fa-map-marker-alt';
+            }
+            if (category === 'shop') return 'fas fa-shopping-bag';
+            if (category === 'tourism') return 'fas fa-camera';
+            return 'fas fa-map-marker-alt';
+        }
+
+
+
+        function selectSearchResult(result) {
+            var lat = parseFloat(result.lat);
+            var lng = parseFloat(result.lon);
+
+            updateLocation(lat, lng);
+            autoFillFields(result);
+
+            // Use shared formatter for the input box value
+            var formatted = searchService.formatResult(result);
+            document.getElementById('searchBox').value = formatted.title;
+            hideSearchDropdown();
+
+            // Validation trigger
+            $('#Latitude, #Longitude').valid();
+        }
+
+        function updateLocation(lat, lng) {
+            document.getElementById('Latitude').value = lat.toFixed(6);
+            document.getElementById('Longitude').value = lng.toFixed(6);
+            marker.setLatLng([lat, lng]);
+            map.setView([lat, lng]);
+        }
+
+        function autoFillFields(result) {
+            var address = result.address || {};
+
+            if (!document.getElementById('cityInput').value && (address.city || address.town)) {
+                document.getElementById('cityInput').value = address.city || address.town;
+                $('#City').valid();
+            }
+
+            if (!document.getElementById('districtInput').value && address.district) {
+                document.getElementById('districtInput').value = address.district;
+                $('#District').valid();
+            }
+
+            if (!document.getElementById('neighborhoodInput').value && address.neighbourhood) {
+                document.getElementById('neighborhoodInput').value = address.neighbourhood;
+            }
+        }
+
+        function updateMarkerFromInputs() {
+            var lat = parseFloat(document.getElementById('Latitude').value);
+            var lng = parseFloat(document.getElementById('Longitude').value);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                marker.setLatLng([lat, lng]);
+                map.setView([lat, lng]);
+            }
+        }
+
+        function clearSearch() {
+            document.getElementById('searchBox').value = '';
+            hideSearchDropdown();
+            searchResults = [];
+        }
+
+        function showSearchDropdown() {
+            document.getElementById('searchDropdown').style.display = 'block';
+        }
+
+        function hideSearchDropdown() {
+            document.getElementById('searchDropdown').style.display = 'none';
+            selectedIndex = -1;
+        }
+
+        function showLoading(show) {
+            document.getElementById('searchLoading').style.display = show ? 'block' : 'none';
+            if (show) {
+                showSearchDropdown();
+                showNoResults(false);
+            }
+        }
+
+        function showNoResults(show) {
+            document.getElementById('noResults').style.display = show ? 'block' : 'none';
+            if (show) {
+                showSearchDropdown();
+            }
+        }
+    </script>
+
+    <style>
+        .custom-marker {
+            background: none !important;
+            border: none !important;
+        }
+
+        .search-result-item {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+            .search-result-item:hover,
+            .search-result-item.active {
+                background-color: #f8f9ff !important;
+                border-left-color: #0d6efd;
+                transform: translateX(2px);
+            }
+
+        .form-floating > label {
+            padding-left: 1rem;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .card-header {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+        }
+
+        #searchDropdown .card {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+            .btn-success:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 0.5rem 1rem rgba(25, 135, 84, 0.25);
+            }
+
+        .text-primary {
+            color: #0d6efd !important;
+        }
+
+        .text-purple {
+            color: #6f42c1 !important;
+        }
+
+        .bg-light {
+            background-color: #f8f9fa !important;
+        }
+
+        /* Validation Styles */
+        .field-validation-error {
+            display: block !important;
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+        }
+
+        .input-validation-error {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+        }
+
+        .validation-summary-errors {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+            .validation-summary-errors ul {
+                margin-bottom: 0;
+                padding-left: 1.5rem;
+            }
+
+        @@media (max-width: 991.98px) {
+            .col-lg-5, .col-lg-7
+
+        {
+            margin-bottom: 1rem;
+        }
+
+        #map {
+            height: 350px !important;
+        }
+
+        }
+    </style>
+}

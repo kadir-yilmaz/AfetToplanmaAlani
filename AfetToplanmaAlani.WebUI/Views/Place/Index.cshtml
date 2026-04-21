@@ -1,0 +1,269 @@
+﻿@model X.PagedList.IPagedList<AfetToplanmaAlani.EL.Models.Place>
+
+@{
+    ViewData["Title"] = "Yer İşaretleri";
+}
+
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h1><i class="bi bi-geo-alt-fill me-2"></i>Yer İşaretleri</h1>
+            <p>Toplanma alanlarını ve yer işaretlerini yönetin</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-controller="PlaceCategory" asp-action="Index" class="btn btn-outline-light d-flex align-items-center justify-content-center">
+                <i class="bi bi-tags me-2"></i>Kategoriler
+            </a>
+            <a asp-action="Create" class="btn-header-add">
+                <i class="bi bi-plus-circle me-2"></i>Yeni Yer Ekle
+            </a>
+        </div>
+    </div>
+
+
+
+    <!-- Filters -->
+    <div class="filter-card mb-4">
+        <div class="card-body">
+            <h5 class="mb-3"><i class="bi bi-funnel me-2"></i>Filtrele ve Ara</h5>
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <label for="searchName" class="form-label small">İsme Göre Ara</label>
+                    <input type="text" id="searchName" class="form-control" placeholder="İsme göre ara..." onkeyup="applyTableFilters()">
+                </div>
+                <div class="col-md-2">
+                    <label for="filterCategory" class="form-label small">Kategori</label>
+                    <select id="filterCategory" class="form-select" onchange="applyTableFilters()">
+                        <option value="">Tümü</option>
+                        @foreach (var cat in Model.Select(p => p.PlaceCategory?.Name).Where(c => !string.IsNullOrEmpty(c)).Distinct())
+                        {
+                            <option value="@cat">@cat</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="filterCity" class="form-label small">İl</label>
+                    <select id="filterCity" class="form-select" onchange="onCityChangeTable()">
+                        <option value="">Tümü</option>
+                        @foreach (var city in Model.Select(p => p.City).Distinct())
+                        {
+                            <option value="@city">@city</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="filterDistrict" class="form-label small">İlçe</label>
+                    <select id="filterDistrict" class="form-select" onchange="onDistrictChangeTable()">
+                        <option value="">Tümü</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="filterNeighborhood" class="form-label small">Mahalle</label>
+                    <select id="filterNeighborhood" class="form-select" onchange="applyTableFilters()">
+                        <option value="">Tümü</option>
+                    </select>
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="clearTableFilters()">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" id="placesTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 15%;">İsim</th>
+                                <th style="width: 10%;">Şehir</th>
+                                <th style="width: 10%;">İlçe</th>
+                                <th style="width: 10%;">Mahalle</th>
+                                <th style="width: 10%;">Enlem</th>
+                                <th style="width: 10%;">Boylam</th>
+                                <th style="width: 15%;">Kategori</th>
+                                <th style="width: 20%;" class="text-center">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody id="placesTbody">
+                            @foreach (var place in Model)
+                            {
+                                <tr>
+                                    <td><strong>@place.Name</strong></td>
+                                    <td>@place.City</td>
+                                    <td>@place.District</td>
+                                    <td>@place.Neighborhood</td>
+                                    <td>@place.Latitude.ToString("F6")</td>
+                                    <td>@place.Longitude.ToString("F6")</td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(place.PlaceCategory?.Name))
+                                        {
+                                            <span class="badge bg-info">@place.PlaceCategory.Name</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a asp-action="Update" asp-route-id="@place.Id"
+                                               class="btn-action btn-action-edit" title="Güncelle">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn-action btn-action-delete"
+                                                    title="Sil"
+                                                    onclick="confirmDelete(@place.Id, '@place.Name')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    
+                    <!-- Pagination -->
+                    @await Html.PartialAsync("_Pagination", Model)
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="table-card">
+            <div class="empty-state">
+                <i class="bi bi-geo-alt"></i>
+                <h5>Henüz yer eklenmemiş</h5>
+                <p class="text-muted">Yeni bir yer eklemek için yukarıdaki butonu kullanın.</p>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Yeri Sil</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong id="deletePlaceName"></strong> yerini silmek istediğinizden emin misiniz?</p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Dikkat!</strong> Bu işlem geri alınamaz.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="deletePlaceId" />
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i>Sil</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(id, name) {
+        document.getElementById('deletePlaceName').textContent = name;
+        document.getElementById('deletePlaceId').value = id;
+        document.getElementById('deleteForm').action = '@Url.Action("Delete")';
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+
+    const allRows = Array.from(document.querySelectorAll("#placesTbody tr"));
+
+    function applyTableFilters() {
+        const name = document.getElementById("searchName").value.toLowerCase();
+        const category = document.getElementById("filterCategory").value;
+        const city = document.getElementById("filterCity").value;
+        const district = document.getElementById("filterDistrict").value;
+        const neighborhood = document.getElementById("filterNeighborhood").value;
+
+        allRows.forEach(row => {
+            const cells = row.children;
+            const matchName = !name || cells[0].textContent.toLowerCase().includes(name);
+            const matchCategory = !category || cells[6].textContent.trim() === category;
+            const matchCity = !city || cells[1].textContent === city;
+            const matchDistrict = !district || cells[2].textContent === district;
+            const matchNeighborhood = !neighborhood || cells[3].textContent === neighborhood;
+
+            row.style.display = (matchName && matchCategory && matchCity && matchDistrict && matchNeighborhood) ? "" : "none";
+        });
+    }
+
+    function onCityChangeTable() {
+        const city = document.getElementById("filterCity").value;
+        const districtSelect = document.getElementById("filterDistrict");
+        const neighborhoodSelect = document.getElementById("filterNeighborhood");
+
+        districtSelect.innerHTML = "<option value=''>Tümü</option>";
+        neighborhoodSelect.innerHTML = "<option value=''>Tümü</option>";
+
+        if (!city) {
+            applyTableFilters();
+            return;
+        }
+
+        const districts = [...new Set(allRows
+            .filter(r => r.children[1].textContent === city)
+            .map(r => r.children[2].textContent)
+            .filter(d => d)
+        )];
+
+        districts.forEach(d => {
+            districtSelect.innerHTML += `<option value="${d}">${d}</option>`;
+        });
+
+        applyTableFilters();
+    }
+
+    function onDistrictChangeTable() {
+        const city = document.getElementById("filterCity").value;
+        const district = document.getElementById("filterDistrict").value;
+        const neighborhoodSelect = document.getElementById("filterNeighborhood");
+
+        neighborhoodSelect.innerHTML = "<option value=''>Tümü</option>";
+
+        if (!district) {
+            applyTableFilters();
+            return;
+        }
+
+        const neighborhoods = [...new Set(allRows
+            .filter(r =>
+                (!city || r.children[1].textContent === city) &&
+                r.children[2].textContent === district
+            )
+            .map(r => r.children[3].textContent)
+            .filter(n => n)
+        )];
+
+        neighborhoods.forEach(n => {
+            neighborhoodSelect.innerHTML += `<option value="${n}">${n}</option>`;
+        });
+
+        applyTableFilters();
+    }
+
+    function clearTableFilters() {
+        document.getElementById("searchName").value = "";
+        document.getElementById("filterCategory").value = "";
+        document.getElementById("filterCity").value = "";
+        document.getElementById("filterDistrict").innerHTML = "<option value=''>Tümü</option>";
+        document.getElementById("filterNeighborhood").innerHTML = "<option value=''>Tümü</option>";
+        allRows.forEach(r => r.style.display = "");
+    }
+</script>

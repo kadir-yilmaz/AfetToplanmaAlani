@@ -1,0 +1,81 @@
+﻿@model AfetToplanmaAlani.EL.Models.PlaceCategory
+@{
+    ViewData["Title"] = "Kategori Güncelle";
+}
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+            <div class="form-card">
+                <div class="form-header">
+                    <h2>
+                        <i class="bi bi-pencil-square me-2"></i>
+                        Kategori Güncelle
+                    </h2>
+                    <p>Kategori bilgilerini düzenleyin</p>
+                </div>
+
+                <div class="form-body">
+                    <form asp-action="Update" method="post">
+                        @Html.AntiForgeryToken()
+                        <input asp-for="Id" type="hidden" />
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Kategori ID</label>
+                            <div class="form-control-plaintext fw-bold">#@Model.Id</div>
+                        </div>
+
+                        <div class="form-floating mb-4">
+                            <input asp-for="Name" class="form-control" id="name"
+                                   placeholder="Kategori adını girin..." />
+                            <label for="name">
+                                <i class="bi bi-tag form-icon"></i>Kategori Adı
+                            </label>
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex gap-3 justify-content-center mt-4">
+                            <button type="submit" class="btn-save">
+                                <i class="bi bi-check-circle me-2"></i>Güncelle
+                            </button>
+                            <a asp-action="Index" class="btn-cancel">
+                                <i class="bi bi-arrow-left me-2"></i>Geri Dön
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            @if (Model.Places != null && Model.Places.Any())
+            {
+                <div class="card mt-4">
+                    <div class="card-header" style="background: var(--primary-gradient); color: white;">
+                        <h6 class="mb-0">
+                            <i class="bi bi-geo-alt me-2"></i>Bu Kategoriye Ait Yerler (@Model.Places.Count())
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach (var place in Model.Places.Take(6))
+                            {
+                                <div class="col-md-6 mb-2">
+                                    <span class="badge bg-light text-dark border">@place.Name</span>
+                                </div>
+                            }
+                            @if (Model.Places.Count() > 6)
+                            {
+                                <div class="col-12">
+                                    <small class="text-muted">ve @(Model.Places.Count() - 6) tane daha...</small>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

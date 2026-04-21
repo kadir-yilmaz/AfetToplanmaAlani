@@ -1,0 +1,797 @@
+﻿@model AfetToplanmaAlani.WebUI.Models.HomeViewModel
+@{
+    ViewData["Title"] = "Afet Toplanma Alanları Haritası";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        /* Map Container */
+        #map {
+            position: absolute;
+            top: 56px;
+            left: 0;
+            width: 100%;
+            height: calc(100% - 56px);
+            z-index: 0;
+        }
+
+        /* Floating Search Bar (Google Maps Style) */
+        .map-search-container {
+            position: absolute;
+            top: 76px; /* Header + padding */
+            left: 20px;
+            width: 350px;
+            z-index: 1000;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            padding: 2px; /* Inner padding for input */
+            transition: all 0.3s ease;
+        }
+        
+        .map-search-input-group {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+        }
+
+        .map-search-input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 15px;
+            color: #333;
+            padding-left: 10px;
+        }
+
+        .map-search-btn {
+            background: none;
+            border: none;
+            color: #5f6368;
+            cursor: pointer;
+            padding: 4px;
+        }
+        
+        .map-search-btn:hover { color: #1a73e8; }
+
+        .search-results-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            border-top: 1px solid #eee;
+        }
+
+        .search-result-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .search-result-item:hover { background-color: #f8f9fa; }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-icon { margin-right: 10px; color: #5f6368; margin-top: 3px; }
+
+        /* Modern Sidebar */
+        #sidebar {
+            position: fixed;
+            top: 56px;
+            right: 0;
+            width: 400px;
+            height: calc(100% - 56px);
+            background: #ffffff;
+            box-shadow: -4px 0 16px rgba(0,0,0,0.1);
+            z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sidebar.closed {
+            transform: translateX(100%);
+        }
+
+        .sidebar-header {
+            background: #ffffff;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .sidebar-content {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #5f6368;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        /* Toggle Button */
+        .toggle-btn {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            right: 400px; /* Sidebar width */
+            width: 24px;
+            height: 48px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+            color: #5f6368;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            transition: right 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            box-shadow: -2px 0 4px rgba(0,0,0,0.05);
+        }
+        
+        .toggle-btn:hover { background-color: #f1f3f4; color: #1a73e8; }
+
+        #sidebar.closed + .toggle-btn {
+            right: 0;
+            border-radius: 8px 0 0 8px; /* Maintain shape */
+        }
+
+        /* Lists & Items */
+        .point-item {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            padding: 12px;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .point-item:hover {
+            border-color: #1a73e8;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .point-item.selected {
+            border-color: #1a73e8;
+            background: #e8f0fe;
+        }
+        
+        .fs-stat { font-size: 1.5rem; font-weight: 700; color: #1a73e8; }
+        .text-stat { font-size: 0.8rem; color: #5f6368; }
+
+    </style>
+}
+
+<!-- Floating Map Search -->
+<div class="map-search-container">
+    <div class="map-search-input-group">
+        <button class="map-search-btn"><i class="bi bi-search"></i></button>
+        <input type="text" id="mapSearchInput" class="map-search-input" placeholder="Haritada ara..." autocomplete="off">
+        <button class="map-search-btn" id="clearMapSearch" style="display:none;"><i class="bi bi-x"></i></button>
+    </div>
+    <div id="mapSearchResults" class="search-results-dropdown"></div>
+</div>
+
+<div id="map"></div>
+
+<div id="sidebar">
+    <div class="sidebar-header">
+        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-geo-alt-fill me-2 text-primary"></i>Yer İşaretleri</h5>
+    </div>
+
+    <div class="sidebar-content">
+        <!-- Stats -->
+        <div class="d-flex gap-4 mb-4 pb-4 border-bottom">
+            <div class="text-center flex-grow-1">
+                <span class="fs-stat d-block" id="totalPoints">@Model.TotalPlaces</span>
+                <span class="text-stat d-block">Toplanma Noktası</span>
+            </div>
+            <div class="text-center flex-grow-1 border-start">
+                <span class="fs-stat d-block" id="totalStaff">@Model.TotalStaff</span>
+                <span class="text-stat d-block">Toplam Personel</span>
+            </div>
+        </div>
+
+        <div class="sidebar-section-title">Filtreleme</div>
+        
+        <div class="mb-3">
+             <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="Kayıtlı yer ara..." onkeyup="applyFilters()">
+             </div>
+        </div>
+
+        <div class="row g-2 mb-4">
+            <div class="col-12">
+                <select id="categoryFilter" class="form-select form-select-sm" onchange="applyFilters()">
+                    <option value="">Kategori: Tümü</option>
+                    @foreach (var cat in Model.Categories.Where(c => !string.IsNullOrEmpty(c)))
+                    {
+                        <option value="@cat">@(string.Concat(cat[0].ToString().ToUpper(), cat.Substring(1).Replace(" ", " ")))</option>
+                    }
+                </select>
+            </div>
+            <div class="col-4">
+                 <select id="cityFilter" class="form-select form-select-sm" onchange="onCityChange()">
+                    <option value="">İl</option>
+                    @foreach (var city in Model.Cities.Where(c => !string.IsNullOrEmpty(c)))
+                    {
+                        <option value="@city">@city</option>
+                    }
+                 </select>
+            </div>
+             <div class="col-4">
+                 <select id="districtFilter" class="form-select form-select-sm" onchange="onDistrictChange()">
+                    <option value="">İlçe</option>
+                 </select>
+            </div>
+             <div class="col-4">
+                 <select id="neighborhoodFilter" class="form-select form-select-sm" onchange="applyFilters()">
+                    <option value="">Mahalle</option>
+                 </select>
+            </div>
+             <div class="col-12 text-end">
+                 <button type="button" class="btn btn-xs btn-link text-decoration-none p-0" onclick="clearFilters()">Temizle</button>
+             </div>
+        </div>
+
+        <div class="sidebar-section-title">Sonuçlar</div>
+        <div id="pointList"></div>
+    </div>
+</div>
+
+<button id="toggleSidebar" class="toggle-btn"><i class="bi bi-chevron-left"></i></button>
+
+<!-- Staff Modal -->
+<div class="modal fade" id="staffModal" tabindex="-1" aria-labelledby="staffModalLabel" aria-hidden="true" style="z-index: 2000;">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staffModalLabel">Personel Listesi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="staffModalBody">
+                    <!-- Content loaded via JS -->
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-primary" id="btnAddStaffModal"><i class="bi bi-plus-lg me-1"></i>Personel Ekle</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/map-search.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
+    <script>
+        var map;
+        var markerCluster;
+        var markers = {};
+        var allPoints = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Places));
+        var ilIlceData = [];
+        var selectedPointId = null;
+        var mapSearchDebounce; // New for map search
+        var searchMarker; // Arama sonucu marker'ı için
+        var searchService; // Shared service instance
+
+        document.addEventListener('DOMContentLoaded', function () {
+            searchService = new MapSearchService(); // Initialize service
+            console.log("=== PAGE LOADED DEBUG ===");
+            console.log("Total points from server:", allPoints.length);
+
+            initMap();
+            initMapSearch(); // New Search
+            loadIlIlceData().then(() => {
+                loadAllPoints();
+            });
+
+            document.getElementById('toggleSidebar').addEventListener('click', () => {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.toggle('closed');
+                const icon = document.querySelector('#toggleSidebar i');
+                icon.classList.toggle('bi-chevron-left');
+                icon.classList.toggle('bi-chevron-right');
+            });
+
+            // const searchInput = document.getElementById('searchInput'); // Old one removed
+        });
+        
+        // --- NEW MAP SEARCH FUNCTIONALITY ---
+        function initMapSearch() {
+            const input = document.getElementById('mapSearchInput');
+            const clearBtn = document.getElementById('clearMapSearch');
+            const resultsDiv = document.getElementById('mapSearchResults');
+
+            input.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                clearTimeout(mapSearchDebounce);
+                
+                if(query.length > 0) clearBtn.style.display = 'block';
+                else clearBtn.style.display = 'none';
+
+                if(query.length < 3) {
+                    resultsDiv.style.display = 'none';
+                    return;
+                }
+
+                mapSearchDebounce = setTimeout(() => {
+                    performMapSearch(query);
+                }, 500);
+            });
+            
+            clearBtn.addEventListener('click', () => {
+                input.value = '';
+                clearBtn.style.display = 'none';
+                resultsDiv.style.display = 'none';
+                input.focus();
+                
+                // Remove search marker
+                if (searchMarker) {
+                    map.removeLayer(searchMarker);
+                    searchMarker = null;
+                }
+            });
+
+            // Close dropdown if clicked outside
+            document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !resultsDiv.contains(e.target)) {
+                    resultsDiv.style.display = 'none';
+                }
+            });
+        }
+
+        function performMapSearch(query) {
+             searchService.search(query)
+                .then(data => {
+                    renderMapSearchResults(data);
+                })
+                .catch(err => console.error("Map search error:", err));
+        }
+
+        function renderMapSearchResults(results) {
+            const resultsDiv = document.getElementById('mapSearchResults');
+            resultsDiv.innerHTML = '';
+            
+            if(results.length === 0) {
+                 resultsDiv.style.display = 'none';
+                 return;
+            }
+
+            results.forEach(item => {
+                // Use shared formatter
+                const formatted = searchService.formatResult(item);
+
+                const div = document.createElement('div');
+                div.className = 'search-result-item';
+                div.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-geo-alt-fill text-muted me-3 fs-5"></i>
+                        <div class="text-truncate">
+                            <div class="fw-bold text-dark">${formatted.title}</div>
+                            <div class="text-muted small text-truncate" style="font-size: 13px;">${formatted.subtitle}</div>
+                        </div>
+                    </div>
+                `;
+                
+                div.onclick = () => {
+                     const lat = parseFloat(item.lat);
+                     const lon = parseFloat(item.lon);
+                     
+                     if (searchMarker) {
+                         map.removeLayer(searchMarker);
+                     }
+
+                     searchMarker = L.marker([lat, lon]).addTo(map);
+                     
+                     searchMarker.bindPopup(`
+                        <div class="text-center">
+                            <h6 class="mb-1">${formatted.title}</h6>
+                            <p class="mb-0 small text-muted">${formatted.subtitle}</p>
+                        </div>
+                     `).openPopup();
+
+                     map.flyTo([lat, lon], 14, { animate: true });
+                     resultsDiv.style.display = 'none';
+                     document.getElementById('mapSearchInput').value = formatted.title;
+                };
+                resultsDiv.appendChild(div);
+            });
+            
+            resultsDiv.style.display = 'block';
+        }
+        // ------------------------------------
+
+        function initMap() {
+            map = L.map('map', { 
+                worldCopyJump: true,
+                zoomControl: false // Disable default top-left zoom control
+            }).setView([39.925533, 32.866287], 6);
+            
+            // Add zoom control to bottom-left (above layer control)
+            L.control.zoom({
+                position: 'bottomleft'
+            }).addTo(map);
+
+            map.setMinZoom(3);
+            map.setMaxZoom(18);
+
+            const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19 }).addTo(map);
+
+            const satelliteLayer = L.layerGroup([
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri' }),
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', { attribution: 'Labels © Esri' })
+            ]);
+
+            L.control.layers({ "Sokak": streetLayer, "Uydu": satelliteLayer }, null, { position: 'bottomleft' }).addTo(map);
+
+            markerCluster = L.markerClusterGroup();
+            map.addLayer(markerCluster);
+        }
+
+        function loadIlIlceData() {
+            return fetch('/data/il-ilce.json')
+                .then(res => res.json())
+                .then(data => {
+                    ilIlceData = data.data || [];
+                    populateCityDropdown();
+                })
+                .catch(err => { console.error("il-ilce.json yüklenemedi:", err); ilIlceData = []; });
+        }
+
+        function normalize(str) {
+            if(!str) return '';
+            return str.toLocaleLowerCase('tr-TR').trim();
+        }
+
+        function capitalize(str) {
+            if(!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function populateCityDropdown() {
+            const citySelect = document.getElementById('cityFilter');
+            citySelect.innerHTML = '<option value="">Tümü</option>';
+            ilIlceData.slice().sort((a,b)=>a.il_adi.localeCompare(b.il_adi))
+                .forEach(il => {
+                    const opt = document.createElement('option');
+                    opt.value = normalize(il.il_adi);
+                    opt.text = capitalize(il.il_adi);
+                    citySelect.appendChild(opt);
+                });
+        }
+
+        function onCityChange() {
+            const selectedCity = document.getElementById('cityFilter').value;
+            const districtSelect = document.getElementById('districtFilter');
+            districtSelect.innerHTML = '<option value="">Tümü</option>';
+
+            if(selectedCity){
+                const cityObj = ilIlceData.find(i => normalize(i.il_adi) === selectedCity);
+                if(cityObj && cityObj.ilceler){
+                    cityObj.ilceler.slice().sort((a,b)=>a.ilce_adi.localeCompare(b.ilce_adi))
+                        .forEach(d => {
+                            const opt = document.createElement('option');
+                            opt.value = normalize(d.ilce_adi);
+                            opt.text = capitalize(d.ilce_adi);
+                            districtSelect.appendChild(opt);
+                        });
+                }
+            }
+            populateNeighborhoodDropdown();
+            applyFilters();
+        }
+
+        function onDistrictChange() {
+            populateNeighborhoodDropdown();
+            applyFilters();
+        }
+
+        function populateNeighborhoodDropdown(){
+            const neighborhoodSelect = document.getElementById('neighborhoodFilter');
+            neighborhoodSelect.innerHTML = '<option value="">Tümü</option>';
+
+            const selectedCity = document.getElementById('cityFilter').value;
+            const selectedDistrict = document.getElementById('districtFilter').value;
+
+            if (!selectedCity) return;
+
+            let filteredPoints = allPoints.filter(p => normalize(p.City) === selectedCity);
+            if (selectedDistrict) filteredPoints = filteredPoints.filter(p => normalize(p.District) === selectedDistrict);
+
+            const neighborhoods = [...new Set(filteredPoints.filter(p => p.Neighborhood).map(p => p.Neighborhood))].sort();
+            neighborhoods.forEach(n => {
+                const opt = document.createElement('option');
+                opt.value = normalize(n);
+                opt.text = capitalize(n);
+                neighborhoodSelect.appendChild(opt);
+            });
+        }
+
+        function createMarkerIcon(isSelected = false) {
+            const color = isSelected ? '#1e3a5f' : '#2d5a87';
+            const iconHtml = `<svg width="24" height="36" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 0C6 0 0 6 0 12c0 7 12 24 12 24s12-17 12-24c0-6-6-12-12-12z" fill="${color}" stroke="white" stroke-width="2"/>
+            </svg>`;
+            return L.divIcon({ html: iconHtml, className: "", iconSize: [24,36], iconAnchor: [12,46] });
+        }
+
+        function addMarker(p){
+            const isSelected = selectedPointId === p.Id;
+            const icon = createMarkerIcon(isSelected);
+            const marker = L.marker([p.Latitude, p.Longitude], { icon: icon });
+
+            const popupContent = `
+                <div class="popup-title">${capitalize(p.Name)}</div>
+                <div><strong>Konum:</strong> ${capitalize(p.City)} / ${capitalize(p.District)} / ${capitalize(p.Neighborhood)}</div>
+                ${p.Category ? `<div><strong>Kategori:</strong> ${capitalize(p.Category)}</div>` : ''}
+                <div class="mt-2"><strong>Personel Sayısı:</strong> ${p.Staff ? p.Staff.length : 0}</div>
+            `;
+
+            marker.on('click', ()=>{
+                L.popup({ offset:[0,-36]}).setLatLng([p.Latitude,p.Longitude])
+                    .setContent(popupContent)
+                    .openOn(map);
+                selectPoint(p.Id);
+            });
+
+            markers[p.Id] = marker;
+            markerCluster.addLayer(marker);
+        }
+
+        function updateMarkerIcon(pointId, isSelected) {
+            if (markers[pointId]) {
+                const marker = markers[pointId];
+                const icon = createMarkerIcon(isSelected);
+                marker.setIcon(icon);
+            }
+        }
+
+        function loadAllPoints(){
+            markerCluster.clearLayers();
+            markers = {};
+            selectedPointId = null;
+            allPoints.forEach(p => addMarker(p));
+            renderPointList(allPoints);
+            populateNeighborhoodDropdown();
+            if(allPoints.length > 0) {
+                map.fitBounds(L.latLngBounds(allPoints.map(p => [p.Latitude, p.Longitude])), {padding:[50,50]});
+            }
+        }
+
+        function renderPointList(points){
+            const listEl = document.getElementById('pointList');
+            if(points.length === 0){
+                listEl.innerHTML = '<div class="text-center text-muted p-5">Sonuç bulunamadı.</div>';
+                return;
+            }
+
+            let html = '';
+            points.forEach(p => {
+                const isSelected = selectedPointId === p.Id;
+                html += `<div class="point-item border rounded p-3 mb-3 ${isSelected ? 'selected' : ''}" data-id="${p.Id}">
+                    <div class="d-flex justify-content-between align-items-center" onclick="selectPoint(${p.Id})">
+                        <div style="flex: 1;">
+                            <strong>${capitalize(p.Name)}</strong><br>
+                            ${p.Category ? `<span class="category-badge">${capitalize(p.Category)}</span><br>` : ''}
+                            <small class="text-muted">${capitalize(p.City)} / ${capitalize(p.District)} / ${capitalize(p.Neighborhood)}</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary d-flex align-items-center" onclick="openStaffModal(${p.Id}); event.stopPropagation();">
+                            <i class="bi bi-person-fill me-1"></i>${p.Staff ? p.Staff.length : 0}
+                        </button>
+                    </div>
+                </div>`;
+            });
+
+            listEl.innerHTML = html;
+            document.getElementById('totalPoints').innerText = points.length;
+            const totalStaff = points.reduce((acc,p) => acc + (p.Staff ? p.Staff.length : 0), 0);
+            document.getElementById('totalStaff').innerText = totalStaff;
+        }
+
+        function openStaffModal(pointId) {
+            const point = allPoints.find(p => p.Id === pointId);
+            if (!point) return;
+
+            // Başlığı ayarla
+            document.getElementById('staffModalLabel').textContent = capitalize(point.Name) + ' - Personeller';
+
+            // İçeriği doldur
+            const modalBody = document.getElementById('staffModalBody');
+            if (!point.Staff || point.Staff.length === 0) {
+                modalBody.innerHTML = '<div class="text-center text-muted py-3">Bu noktada kayıtlı personel bulunmamaktadır.</div>';
+            } else {
+                let html = '<div class="list-group list-group-flush">';
+                point.Staff.forEach(s => {
+                    html += `
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1 fw-bold">${capitalize(s.Name)} ${capitalize(s.Surname)}</h6>
+                            </div>
+                            <small class="text-muted"><i class="bi bi-telephone me-1"></i>${s.PhoneNumber || 'Numara Yok'}</small>
+                        </div>`;
+                });
+                html += '</div>';
+                modalBody.innerHTML = html;
+            }
+
+            // Yeni Personel Ekle butonunu ayarla
+            const btnAddStaff = document.getElementById('btnAddStaffModal');
+            if(btnAddStaff) {
+                // Burada Staff/Create metoduna placeId parametresi ile gönderiyoruz
+                // Eğer StaffController'da create metodunuz int? placeId alıyorsa otomatik seçili gelir.
+                btnAddStaff.onclick = function() {
+                    window.location.href = '/Staff/Create?placeId=' + pointId;
+                };
+            }
+
+            // Modalı aç
+            const modalEl = document.getElementById('staffModal');
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+            } else {
+                // Fallback: Eğer bootstrap global değilse (örneğin module system)
+                console.warn("Bootstrap JS global nesnesi bulunamadı.");
+            }
+        }
+
+        function selectPoint(id){
+            if (selectedPointId !== null) {
+                updateMarkerIcon(selectedPointId, false);
+            }
+
+            selectedPointId = id;
+            updateMarkerIcon(id, true);
+
+            document.querySelectorAll('.point-item').forEach(item => item.classList.remove('selected'));
+            const el = document.querySelector(`.point-item[data-id="${id}"]`);
+            if(el){
+                el.classList.add('selected');
+                el.scrollIntoView({behavior:'smooth', block:'center'});
+            }
+
+            if(markers[id]) {
+                const point = allPoints.find(p => p.Id === id);
+                if(point) {
+                    const marker = markers[id];
+
+                    // Marker cluster içindeyse
+                    if (!map.getBounds().contains(marker.getLatLng())) {
+                        markerCluster.zoomToShowLayer(marker, () => {
+                            map.flyTo(marker.getLatLng(), 18, { animate: true });
+                            openPointPopup(point);
+                        });
+                    } else {
+                        // Marker zaten görünüyorsa yine de ortala
+                        map.flyTo(marker.getLatLng(), 18, { animate: true });
+                        openPointPopup(point);
+                    }
+                }
+            }
+        }
+
+        function openPointPopup(point) {
+            const popupContent = `
+                <div class="popup-title">${capitalize(point.Name)}</div>
+                <div><strong>Konum:</strong> ${capitalize(point.City)} / ${capitalize(point.District)} / ${capitalize(point.Neighborhood)}</div>
+                ${point.Category ? `<div><strong>Kategori:</strong> ${capitalize(point.Category)}</div>` : ''}
+                <div class="mt-2"><strong>Personel Sayısı:</strong> ${point.Staff ? point.Staff.length : 0}</div>
+            `;
+
+            L.popup({ offset:[0,-36]})
+                .setLatLng([point.Latitude, point.Longitude])
+                .setContent(popupContent)
+                .openOn(map);
+        }
+
+        function applyFilters(){
+            console.log("=== APPLY FILTERS START ===");
+
+            const name = normalize(document.getElementById('searchInput').value);
+            const category = document.getElementById('categoryFilter').value;
+            const city = normalize(document.getElementById('cityFilter').value);
+            const district = normalize(document.getElementById('districtFilter').value);
+            const neighborhood = normalize(document.getElementById('neighborhoodFilter').value);
+
+            console.log("Filter values:");
+            console.log("- Name:", name);
+            console.log("- Category:", category);
+            console.log("- City:", city);
+            console.log("- District:", district);
+            console.log("- Neighborhood:", neighborhood);
+
+            console.log("\nAll points count:", allPoints.length);
+            console.log("First 3 points:");
+            allPoints.slice(0, 3).forEach((p, index) => {
+                console.log(`Point ${index + 1}:`, {
+                    id: p.Id,
+                    name: p.Name,
+                    category: p.Category,
+                    city: p.City,
+                    district: p.District
+                });
+            });
+
+            const filtered = allPoints.filter(p => {
+                const nameMatch = !name || normalize(p.Name).includes(name);
+                const categoryMatch = !category || (p.Category && p.Category === category);
+                const cityMatch = !city || (p.City && normalize(p.City) === city);
+                const districtMatch = !district || (p.District && normalize(p.District) === district);
+                const neighborhoodMatch = !neighborhood || (p.Neighborhood && normalize(p.Neighborhood) === neighborhood);
+
+                if (category) {
+                    console.log(`Point ${p.Id} category check:`, {
+                        pointCategory: p.Category,
+                        selectedCategory: category,
+                        match: categoryMatch
+                    });
+                }
+
+                return nameMatch && categoryMatch && cityMatch && districtMatch && neighborhoodMatch;
+            });
+
+            console.log("Filtered results:", filtered.length);
+            console.log("=== APPLY FILTERS END ===");
+
+            // Seçimi sıfırla
+            selectedPointId = null;
+
+            markerCluster.clearLayers();
+            markers = {};
+            filtered.forEach(p => addMarker(p));
+            renderPointList(filtered);
+
+            if(filtered.length > 0) {
+                map.fitBounds(L.latLngBounds(filtered.map(p => [p.Latitude, p.Longitude])), {padding:[50,50]});
+            }
+        }
+
+        function clearSearch(){
+            const input = document.getElementById('searchInput');
+            input.value = '';
+            applyFilters();
+        }
+
+        function clearFilters(){
+            clearSearch();
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('cityFilter').value = '';
+            document.getElementById('districtFilter').innerHTML = '<option value="">Tümü</option>';
+            document.getElementById('neighborhoodFilter').innerHTML = '<option value="">Tümü</option>';
+            loadAllPoints();
+        }
+    </script>
+}

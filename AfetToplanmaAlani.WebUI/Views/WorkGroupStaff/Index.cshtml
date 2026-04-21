@@ -1,0 +1,322 @@
+﻿@model X.PagedList.IPagedList<AfetToplanmaAlani.EL.Models.WorkGroupStaff>
+@{
+    ViewData["Title"] = "Çalışma Grubu Personelleri";
+}
+
+<div class="container-fluid py-4">
+    <!-- Alert Messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Warning"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Warning"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Page Header -->
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h1><i class="bi bi-people-fill me-2"></i>Çalışma Grubu Personelleri</h1>
+            <p>
+                Tüm personelleri yönetin ve izleyin
+                @if (ViewBag.FilteredCount != null && ViewBag.TotalCount != null)
+                {
+                    <span class="badge bg-light text-dark ms-2">@ViewBag.FilteredCount / @ViewBag.TotalCount</span>
+                }
+            </p>
+        </div>
+        <div class="btn-group">
+            <a asp-action="Create" class="btn-header-add">
+                <i class="bi bi-plus-circle me-2"></i>Yeni Personel Ekle
+            </a>
+            <button type="button" class="btn-header-add dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" style="border-left: 1px solid rgba(255,255,255,0.3);">
+                <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#importModal"><i class="bi bi-download me-2"></i>Excel ile İçe Aktar</a></li>
+                <li>
+                    <form asp-action="ExportExcel" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="search" value="@ViewBag.Search" />
+                        <input type="hidden" name="workGroup" value="@ViewBag.WorkGroup" />
+                        <button type="submit" class="dropdown-item">
+                            <i class="bi bi-upload me-2"></i>Excel Olarak Dışa Aktar
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="filter-card mb-4">
+        <div class="card-body">
+            <h5 class="mb-3"><i class="bi bi-funnel me-2"></i>Filtrele ve Ara</h5>
+            <form method="get" id="filterForm" class="row g-3">
+                <div class="col-lg-4">
+                    <label class="form-label">İsim veya Soyisim</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" name="search" id="searchInput" value="@ViewBag.Search" placeholder="Ara..." />
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <label class="form-label">Çalışma Grubu</label>
+                    <select class="form-select" name="workGroup" id="workGroupSelect">
+                        <option value="">Tüm Gruplar</option>
+                        @if (ViewBag.WorkGroups != null)
+                        {
+                            foreach (var wg in ViewBag.WorkGroups)
+                            {
+                                <option value="@wg" selected="@(ViewBag.WorkGroup?.ToString() == wg)">@wg</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-lg-4 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-1"></i> Filtrele
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Temizle
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+        <div class="card-body p-0">
+            @if (Model != null && Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th><i class="bi bi-person me-1"></i>Ad Soyad</th>
+                                <th><i class="bi bi-telephone me-1"></i>Telefon</th>
+                                <th><i class="bi bi-people me-1"></i>Çalışma Grubu</th>
+                                <th><i class="bi bi-building me-1"></i>Ekip</th>
+                                <th><i class="bi bi-briefcase me-1"></i>Görev</th>
+                                <th class="text-end"><i class="bi bi-gear me-1"></i>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var staff in Model.OrderBy(s => s.Name).ThenBy(s => s.Surname))
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm me-2">
+                                                @(staff.Name?.FirstOrDefault() ?? '?')
+                                            </div>
+                                            <span class="fw-medium">@staff.Name @staff.Surname</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(staff.PhoneNumber))
+                                        {
+                                            <a href="tel:@staff.PhoneNumber" class="text-decoration-none">
+                                                <i class="bi bi-telephone me-1"></i>@staff.PhoneNumber
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(staff.WorkGroup))
+                                        {
+                                            <span class="badge bg-secondary">@staff.WorkGroup</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>@(staff.Crew ?? "-")</td>
+                                    <td>@(staff.Duty ?? "-")</td>
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a asp-action="Update" asp-route-id="@staff.Id"
+                                               class="btn-action btn-action-edit"
+                                               title="Düzenle">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button"
+                                                    class="btn-action btn-action-delete"
+                                                    title="Sil"
+                                                    data-id="@staff.Id"
+                                                    data-name="@staff.Name @staff.Surname"
+                                                    onclick="confirmDelete(this)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    
+                    <!-- Pagination -->
+                    @await Html.PartialAsync("_Pagination", Model)
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-people"></i>
+                    <h4>Personel Bulunamadı</h4>
+                    <p class="text-muted">
+                        @if (!string.IsNullOrWhiteSpace(ViewBag.Search?.ToString()) || !string.IsNullOrWhiteSpace(ViewBag.WorkGroup?.ToString()))
+                        {
+                            <span>Arama kriterlerine uygun personel bulunamadı.</span>
+                        }
+                        else
+                        {
+                            <span>Henüz personel eklenmemiş.</span>
+                        }
+                    </p>
+                    @if (string.IsNullOrWhiteSpace(ViewBag.Search?.ToString()) && string.IsNullOrWhiteSpace(ViewBag.WorkGroup?.ToString()))
+                    {
+                        <a asp-action="Create" class="btn btn-primary mt-2">
+                            <i class="bi bi-plus-circle me-2"></i>İlk Personeli Ekle
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Personeli Sil
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-exclamation-triangle-fill text-warning fs-3 me-3"></i>
+                    <div>
+                        <p class="mb-1"><strong id="deleteStaffName"></strong> isimli personeli silmek istediğinizden emin misiniz?</p>
+                        <small class="text-muted">Bu işlem geri alınamaz.</small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>İptal
+                </button>
+                <form id="deleteForm" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Sil
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Excel Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="ImportExcel" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="importModalLabel">
+                        <i class="bi bi-file-earmark-arrow-up me-2"></i>Excel ile Personel Ekle
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Excel Dosyası Seçin</label>
+                        <input type="file" class="form-control" name="file" accept=".xlsx,.xls" required />
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>Desteklenen formatlar: .xlsx, .xls
+                        </div>
+                    </div>
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading"><i class="bi bi-info-circle-fill me-2"></i>Önemli Bilgiler</h6>
+                        <ul class="mb-0">
+                            <li>Sütun sırası: Ad, Soyad, Telefon, Çalışma Grubu, Ekip, Görev</li>
+                            <li>Ad ve Soyad zorunludur</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>İptal
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-file-earmark-arrow-up me-1"></i>İçe Aktar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const searchInput = document.getElementById("searchInput");
+        const filterForm = document.getElementById("filterForm");
+
+        if (searchInput) {
+            searchInput.addEventListener("keypress", function(e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    filterForm.submit();
+                }
+            });
+        }
+
+        const workGroupSelect = document.getElementById("workGroupSelect");
+        if (workGroupSelect) {
+            workGroupSelect.addEventListener("change", function() {
+                filterForm.submit();
+            });
+        }
+
+        const importModal = document.getElementById('importModal');
+        if (importModal) {
+            importModal.addEventListener('hidden.bs.modal', function () {
+                const fileInput = importModal.querySelector('input[type="file"]');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+            });
+        }
+    });
+
+    function confirmDelete(button) {
+        var id = button.dataset.id;
+        var name = button.dataset.name;
+        document.getElementById('deleteStaffName').textContent = name;
+        document.getElementById('deleteForm').action = '@Url.Action("Delete", "WorkGroupStaff")/' + id;
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+</script>

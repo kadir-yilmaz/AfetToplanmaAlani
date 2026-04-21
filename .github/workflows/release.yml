@@ -1,0 +1,85 @@
+name: Release Electron app
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on tags like v1.0.0
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    permissions:
+      contents: write # Needed to create releases
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install ElectronNET.CLI
+        run: dotnet tool install ElectronNET.CLI -g
+
+      - name: Get version from tag
+        id: get_version
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = $tag -replace '^v', ''
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          echo "Building version $version"
+
+      - name: Patch manifest version
+        shell: pwsh
+        run: |
+          $manifestPath = "AfetToplanmaAlani.WebUI/electron.manifest.json"
+          $manifest = Get-Content $manifestPath | ConvertFrom-Json
+          $manifest.build.buildVersion = "${{ steps.get_version.outputs.VERSION }}"
+          $manifest | ConvertTo-Json -Depth 10 | Set-Content $manifestPath
+          echo "Manifest updated to version ${{ steps.get_version.outputs.VERSION }}"
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build Electron app
+        run: |
+          cd AfetToplanmaAlani.WebUI
+          dotnet electronize build /target win /publish-ready-to-run true
+
+      - name: Package ZIP
+        shell: pwsh
+        run: |
+          # Find the unpacked directory (usually bin/desktop/win-unpacked)
+          $unpackedDir = Get-ChildItem -Path "AfetToplanmaAlani.WebUI/bin/desktop/*/win-unpacked" -Directory | Select-Object -First 1
+          if (-not $unpackedDir) {
+              # Fallback search if path is different
+              $unpackedDir = Get-ChildItem -Path "AfetToplanmaAlani.WebUI/bin/desktop" -Recurper -Filter "win-unpacked" -Directory | Select-Object -First 1
+          }
+          
+          if ($unpackedDir) {
+              echo "Found unpacked dir at $($unpackedDir.FullName)"
+              Compress-Archive -Path "$($unpackedDir.FullName)\*" -DestinationPath "AfetToplanmaAlani-v${{ steps.get_version.outputs.VERSION }}-win.zip"
+          } else {
+              echo "Error: win-unpacked directory not found!"
+              exit 1
+          }
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "*.zip"
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

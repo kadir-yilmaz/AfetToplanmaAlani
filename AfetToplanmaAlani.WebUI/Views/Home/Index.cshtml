@@ -1,0 +1,85 @@
+﻿@{
+    ViewData["Title"] = "Ana Sayfa";
+}
+
+<div class="container py-4">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <img src="~/images/afad.png" alt="AFAD" />
+        <h1>AFAD Toplanma Alanı Yönetim Sistemi</h1>
+        <img src="~/images/avcilarkaymakamligi.png" alt="Avcılar Kaymakamlığı" />
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="row g-4 justify-content-center">
+        <!-- Yer İşaretleri -->
+        <div class="col-md-4">
+            <a asp-controller="Place" asp-action="Index" class="card h-100 text-decoration-none border-0 shadow-sm hover-scale" 
+               style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); min-height: 200px;">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center text-white text-center p-4">
+                    <i class="fa-solid fa-location-dot fa-3x mb-3 opacity-75"></i>
+                    <h3 class="fw-bold mb-2">Yer İşaretleri</h3>
+                    <p class="mb-0 opacity-75 small">Toplanma alanlarını görüntüle ve yönet</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Yer Personelleri -->
+        <div class="col-md-4">
+            <a asp-controller="Staff" asp-action="Index" class="card h-100 text-decoration-none border-0 shadow-sm hover-scale" 
+               style="background: linear-gradient(135deg, #198754 0%, #146c43 100%); min-height: 200px;">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center text-white text-center p-4">
+                    <i class="fa-solid fa-users fa-3x mb-3 opacity-75"></i>
+                    <h3 class="fw-bold mb-2">Yer Personelleri</h3>
+                    <p class="mb-0 opacity-75 small">Bölge sorumlularını ve personelleri yönet</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Çalışma Grubu Personelleri -->
+        <div class="col-md-4">
+            <a asp-controller="WorkGroupStaff" asp-action="Index" class="card h-100 text-decoration-none border-0 shadow-sm hover-scale" 
+               style="background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%); min-height: 200px;">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center text-white text-center p-4">
+                    <i class="fa-solid fa-users-gear fa-3x mb-3 opacity-75"></i>
+                    <h3 class="fw-bold mb-2">Çalışma Grupları</h3>
+                    <p class="mb-0 opacity-75 small">Afet çalışma grupları ve ekipler</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Araçlar -->
+        <div class="col-md-6">
+            <a asp-controller="Vehicle" asp-action="Index" class="card h-100 text-decoration-none border-0 shadow-sm hover-scale" 
+               style="background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%); min-height: 180px;">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center text-dark text-center p-4">
+                    <i class="fa-solid fa-car fa-3x mb-3 opacity-75"></i>
+                    <h3 class="fw-bold mb-2">Araç Yönetimi</h3>
+                    <p class="mb-0 opacity-75 small">Araç envanteri ve görevlendirmeler</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Yedekleme -->
+        <div class="col-md-6">
+            <a asp-controller="Backup" asp-action="Index" class="card h-100 text-decoration-none border-0 shadow-sm hover-scale" 
+               style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%); min-height: 180px;">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center text-white text-center p-4">
+                    <i class="fa-solid fa-database fa-3x mb-3 opacity-75"></i>
+                    <h3 class="fw-bold mb-2">Yedekleme</h3>
+                    <p class="mb-0 opacity-75 small">Veritabanı yedekleme ve geri yükleme işlemleri</p>
+                </div>
+            </a>
+        </div>
+    </div>
+    
+    <style>
+        .hover-scale {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease;
+        }
+        .hover-scale:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+        }
+    </style>
+</div>

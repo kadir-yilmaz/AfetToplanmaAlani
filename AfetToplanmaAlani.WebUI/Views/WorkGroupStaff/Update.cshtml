@@ -1,0 +1,108 @@
+﻿@model AfetToplanmaAlani.EL.Models.WorkGroupStaff
+@{
+    ViewData["Title"] = "Personel Güncelle";
+}
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="form-card">
+                <div class="form-header">
+                    <h2><i class="bi bi-person-gear me-2"></i>Personel Güncelle</h2>
+                    <p>@Model.Name @Model.Surname personelinin bilgilerini güncelleyin</p>
+                </div>
+
+                <div class="form-body">
+                    <form asp-action="Update" method="post">
+                        <input asp-for="Id" type="hidden" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="Name" class="form-control" id="name" placeholder="Ad" />
+                                    <label for="name"><i class="bi bi-person form-icon"></i>Ad <span class="text-danger">*</span></label>
+                                </div>
+                                <span asp-validation-for="Name" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="Surname" class="form-control" id="surname" placeholder="Soyad" />
+                                    <label for="surname"><i class="bi bi-person form-icon"></i>Soyad <span class="text-danger">*</span></label>
+                                </div>
+                                <span asp-validation-for="Surname" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="PhoneNumber" class="form-control" id="phone" placeholder="Telefon" />
+                                    <label for="phone"><i class="bi bi-telephone form-icon"></i>Telefon</label>
+                                </div>
+                                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select asp-for="WorkGroup" class="form-select" id="workGroup">
+                                        <option value="">Seçiniz...</option>
+                                        @if (ViewBag.WorkGroups != null)
+                                        {
+                                            foreach (var wg in ViewBag.WorkGroups)
+                                            {
+                                                <option value="@wg">@wg</option>
+                                            }
+                                        }
+                                    </select>
+                                    <label for="workGroup"><i class="bi bi-people form-icon"></i>Çalışma Grubu</label>
+                                </div>
+                                <span asp-validation-for="WorkGroup" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="Crew" class="form-control" id="crew" placeholder="Ekip" />
+                                    <label for="crew"><i class="bi bi-building form-icon"></i>Ekip</label>
+                                </div>
+                                <span asp-validation-for="Crew" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="Duty" class="form-control" id="duty" placeholder="Görev" />
+                                    <label for="duty"><i class="bi bi-briefcase form-icon"></i>Görev</label>
+                                </div>
+                                <span asp-validation-for="Duty" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-3 justify-content-center mt-4">
+                            <button type="submit" class="btn-save">
+                                <i class="bi bi-check-circle me-2"></i>Güncelle
+                            </button>
+                            <a asp-action="Index" class="btn-cancel">
+                                <i class="bi bi-x-circle me-2"></i>İptal
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelector('input[name="PhoneNumber"]')?.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 11) {
+            value = value.substring(0, 11);
+        }
+        e.target.value = value;
+    });
+</script>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
