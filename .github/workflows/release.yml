@@ -27,7 +27,11 @@ jobs:
           node-version: '20'
 
       - name: Install ElectronNET.CLI
-        run: dotnet tool install ElectronNET.CLI -g
+        run: |
+          dotnet tool install ElectronNET.CLI -g
+          "$env:USERPROFILE\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+
 
       - name: Get version from tag
         id: get_version
@@ -62,7 +66,7 @@ jobs:
           $unpackedDir = Get-ChildItem -Path "AfetToplanmaAlani.WebUI/bin/desktop/*/win-unpacked" -Directory | Select-Object -First 1
           if (-not $unpackedDir) {
               # Fallback search if path is different
-              $unpackedDir = Get-ChildItem -Path "AfetToplanmaAlani.WebUI/bin/desktop" -Recurper -Filter "win-unpacked" -Directory | Select-Object -First 1
+              $unpackedDir = Get-ChildItem -Path "AfetToplanmaAlani.WebUI" -Recurse -Filter "win-unpacked" -Directory | Select-Object -First 1
           }
           
           if ($unpackedDir) {
