@@ -9,9 +9,9 @@ namespace AfetToplanmaAlani.WebUI.Infrastructure.Extension
     {
         public static void ConfigureDbContext(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment env)
         {
-            // Electron uygulamasında veritabanını kullanıcı verisi klasöründe oluştur
-            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var dbFolder = Path.Combine(appDataPath, "AFAD");
+            // Uygulamanın kendi klasöründe 'Database' adında bir klasör oluştur
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var dbFolder = Path.Combine(baseDirectory, "Database");
             
             // Klasör yoksa oluştur
             if (!Directory.Exists(dbFolder))
