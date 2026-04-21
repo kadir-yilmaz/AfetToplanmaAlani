@@ -27,9 +27,8 @@ jobs:
           node-version: '20'
 
       - name: Install ElectronNET.CLI
-        run: |
-          dotnet new tool-manifest
-          dotnet tool install ElectronNET.CLI
+        run: dotnet tool install ElectronNET.CLI -g
+
 
 
 
@@ -56,9 +55,11 @@ jobs:
         run: dotnet restore
 
       - name: Build Electron app
+        shell: pwsh
         run: |
           cd AfetToplanmaAlani.WebUI
-          dotnet tool run electronize build /target win /publish-ready-to-run true
+          & "$env:USERPROFILE\.dotnet\tools\electronize.exe" build /target win /publish-ready-to-run true
+
 
 
       - name: Package ZIP
