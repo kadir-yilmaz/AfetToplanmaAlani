@@ -15,7 +15,7 @@
       "destination": "wwwroot/lib/font-awesome/"
     },
     {
-      "library": "jquery-validation@1.19.5",
+      "library": "jquery-validate@1.19.5",
       "destination": "wwwroot/lib/jquery-validation/dist/"
     },
     {
