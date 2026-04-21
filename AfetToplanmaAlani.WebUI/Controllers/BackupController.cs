@@ -242,8 +242,20 @@ namespace AfetToplanmaAlani.WebUI.Controllers
         private string GetDatabasePath()
         {
             // Veritabanı yolunu ServiceExtension ile aynı şekilde al
-            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var dbFolder = Path.Combine(appDataPath, "AFAD");
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var dbFolder = Path.Combine(baseDirectory, "Database");
+
+            // Electron modundaysak, resources/bin klasöründen ana dizine (AFAD.exe'nin yanına) çık
+            if (HybridSupport.IsElectronActive)
+            {
+                // resources/bin -> resources -> ana dizin (parent.parent)
+                var rootDir = Directory.GetParent(baseDirectory)?.Parent?.FullName;
+                if (!string.IsNullOrEmpty(rootDir))
+                {
+                    dbFolder = Path.Combine(rootDir, "Database");
+                }
+            }
+
             return Path.Combine(dbFolder, "app.db");
         }
     }

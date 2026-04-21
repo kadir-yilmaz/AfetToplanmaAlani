@@ -27,6 +27,8 @@ builder.Services.AddAutoMapper(typeof(Program));
 
 var app = builder.Build();
 
+var version = app.Configuration["Version"] ?? "Unknown";
+
 await InitializeDatabaseAsync(app);
 
 _ = Task.Run(async () =>
@@ -36,6 +38,7 @@ _ = Task.Run(async () =>
         Width = 1200,
         Height = 800,
         Show = true,
+        Title = $"AFAD Toplanma Alanı Yönetim Sistemi - Version: {version}",
         AutoHideMenuBar = true
     });
 });

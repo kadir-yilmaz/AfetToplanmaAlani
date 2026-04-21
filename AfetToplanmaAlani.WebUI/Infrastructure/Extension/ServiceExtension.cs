@@ -12,6 +12,17 @@ namespace AfetToplanmaAlani.WebUI.Infrastructure.Extension
             // Uygulamanın kendi klasöründe 'Database' adında bir klasör oluştur
             var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var dbFolder = Path.Combine(baseDirectory, "Database");
+
+            // Electron modundaysak, resources/bin klasöründen ana dizine (AFAD.exe'nin yanına) çık
+            if (ElectronNET.API.HybridSupport.IsElectronActive)
+            {
+                // resources/bin -> resources -> ana dizin (parent.parent)
+                var rootDir = Directory.GetParent(baseDirectory)?.Parent?.FullName;
+                if (!string.IsNullOrEmpty(rootDir))
+                {
+                    dbFolder = Path.Combine(rootDir, "Database");
+                }
+            }
             
             // Klasör yoksa oluştur
             if (!Directory.Exists(dbFolder))

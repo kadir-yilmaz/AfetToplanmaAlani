@@ -55,6 +55,14 @@ jobs:
           $manifest.build.buildVersion = "${{ steps.get_version.outputs.VERSION }}"
           $manifest | ConvertTo-Json -Depth 10 | Set-Content $manifestPath
 
+      - name: Patch appsettings version
+        shell: pwsh
+        run: |
+          $settingsPath = "AfetToplanmaAlani.WebUI/appsettings.json"
+          $settings = Get-Content $settingsPath | ConvertFrom-Json
+          $settings.Version = "${{ steps.get_version.outputs.VERSION }}"
+          $settings | ConvertTo-Json -Depth 10 | Set-Content $settingsPath
+
       - name: Restore .NET dependencies
         run: dotnet restore
 
